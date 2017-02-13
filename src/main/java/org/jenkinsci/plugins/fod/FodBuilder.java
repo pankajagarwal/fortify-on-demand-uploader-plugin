@@ -45,11 +45,14 @@ import hudson.util.ListBoxModel.Option;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.KeyManagementException;
+
 
 /*
  * @author ryancblack
  * @author Michael.A.Marshall
- * 
+ *
  */
 public class FodBuilder extends Recorder implements SimpleBuildStep
 {
@@ -57,7 +60,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 	protected static final String CLASS_NAME = FodBuilder.class.getName();
 
 	private static Logger log = LogManager.getLogManager().getLogger(FodBuilder.class.getCanonicalName());
-	
+
 	// Thread local variable containing each thread's taskListener. for use during a build only.
 	private static final ThreadLocal<TaskListener> taskListener =
 		new ThreadLocal<TaskListener>();
@@ -80,7 +83,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 	private boolean doPrettyLogOutput;
 	private boolean includeAllFiles;
 	private boolean includeThirdParty;
-	
+
 
 	// Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
 	@DataBoundConstructor
@@ -163,28 +166,28 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 	}
 	public boolean doPrettyLogOutput()
 	{
-		return doPrettyLogOutput;		
+		return doPrettyLogOutput;
 	}
 	public boolean includeThirdParty()
 	{
 		return includeThirdParty;
 	}
-	
+
 	protected static TaskListener getTaskListener()
 	{
 		return taskListener.get();
 	}
-	
+
 	protected static void setTaskListener(TaskListener listener)
 	{
 		taskListener.set(listener);
 	}
-	
+
 	protected static void clearTaskListener()
 	{
 		taskListener.remove();
 	}
-	
+
 	protected static PrintStream getLogger()
 	{
 		TaskListener listener = getTaskListener();
@@ -196,88 +199,88 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		}
 		return returnVal;
 	}
-	
-	
+
+
 	/** Takes technologyStack and returns a correct regular expression for files needed by that type
 	 * @param technologyStack
 	 * @return regular expression string of files by language
 	 */
 	private static String getFileExpressionPatternString(String technologyStack){
-		
+
 		String constantFiles = "|.*\\.html|.*\\.htm|.*\\.js|.*\\.xml|.*\\.xsd|.*\\.xmi|.*\\.wsdd|.*\\.config|.*\\.settings|.*\\.cpx|.*\\.xcfg|.*\\.cscfg|.*\\.cscdef|.*\\.wadcfg|.*\\.appxmanifest"
 							 + "|.*\\.wsdl|.*\\.plist|.*\\.properties|.*\\.ini|.*\\.sql|.*\\.pks|.*\\.pkh|.*\\.pkb";
-		
-		
+
+
 		if (technologyStack.equalsIgnoreCase(".NET")){
-			
+
 			return ".*\\.dll|.*\\.pdb|.*\\.cs|.*\\.aspx|.*\\.asp|.*\\.vb|.*\\.vbproj|.*\\.csproj|.*\\.sln" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("JAVA/J2EE")){
-			
+
 			return ".*\\.java|.*\\.class|.*\\.ear|.*\\.war|.*\\.jar|.*\\.jsp|.*\\.tag|.*\\.tagx|.*\\.tld|.*\\.jspx|.*\\.xhtml|.*\\.faces|.*\\.jsff|.*\\.properties" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("Python")){
-			
+
 			return ".*\\.py" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("Ruby")){
-			
+
 			return ".*\\.rb|.*\\.erb" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("Objective-C")){
-			
+
 			return ".*"; //returning all as mobile applications are typically small and we must build them to assess.
 		}
 		if (technologyStack.equalsIgnoreCase("Swift")){
-			
+
 			return ".*";
 		}
 		if (technologyStack.equalsIgnoreCase("iOS")){
-			
+
 			return ".*";
 		}
 		if (technologyStack.equalsIgnoreCase("ASP")){
-			
+
 			return ".*\\.asp" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("PHP")){
-			
+
 			return ".*\\.php" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("VB6")){
-			
+
 			return ".*\\.vbs|.*\\.bas|.*\\.frm|.*\\.ctl|.*\\.cls" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("VBScript")){
-			
+
 			return ".*\\.vbscript" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("Android")){
-			
-			return ".*\\.java|.*\\.class|.*\\.ear|.*\\.war|.*\\.jar|.*\\.jsp|.*\\.tag|.*\\.tagx|.*\\.tld|.*\\.jspx|.*\\.xhtml|.*\\.faces|.*\\.jsff|.*\\.properties|.*\\.apk" + constantFiles;			
+
+			return ".*\\.java|.*\\.class|.*\\.ear|.*\\.war|.*\\.jar|.*\\.jsp|.*\\.tag|.*\\.tagx|.*\\.tld|.*\\.jspx|.*\\.xhtml|.*\\.faces|.*\\.jsff|.*\\.properties|.*\\.apk" + constantFiles;
 			// APK is not normally used for Static analysis but we are collecting in the event it is useful
 		}
 		if (technologyStack.equalsIgnoreCase("Other")){
-			
+
 			return ".*";
 		}
 		if (technologyStack.equalsIgnoreCase("XML/HTML")){
-			
+
 			return ".*\\.xml|.*\\.xsd|.*\\.xmi|.*\\.wsdd|.*\\.config|.*\\.cpx|.*\\.xcfg" + constantFiles;
 		}
 		if (technologyStack.contains("SQL")){
-			
+
 			return ".*\\.sql|.*\\.pks|.*\\.pkh|.*\\.pkb" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("ABAP")){
-			
+
 			return ".*\\.abap" + constantFiles;
 		}
 		if (technologyStack.equalsIgnoreCase("CFML")){
-			
+
 			return ".*\\.cfm|.*\\.cfml|.*\\.cfc" + constantFiles;
 		}
-		
+
 		return ".*";
 	}
 
@@ -294,12 +297,12 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		String clientId = descriptor.getClientId();
 		String clientSecret = descriptor.getClientSecret();
 		String pollingInterval = descriptor.getPollingInterval();
-		
+
 		final PrintStream logger = listener.getLogger();
-		
-		logger.println(METHOD_NAME+": foDUrl = "+fodUrl);	
-	//	logger.println(METHOD_NAME+": filePattern = \""+filePattern+"\"");		
-			
+
+		logger.println(METHOD_NAME+": foDUrl = "+fodUrl);
+	//	logger.println(METHOD_NAME+": filePattern = \""+filePattern+"\"");
+
 		if (assessmentTypeId == null || assessmentTypeId.trim().isEmpty())
 		{
 			logger.println(METHOD_NAME+": No valid static assessment types are available, please contact your Technical Account Manager for assistance.");
@@ -312,12 +315,12 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		logger.println(METHOD_NAME+": releaseName = "+releaseName);
 		logger.println(METHOD_NAME+": technologyStack = "+technologyStack);
 		logger.println(METHOD_NAME+": languageLevel = "+languageLevel);
-		
+
 		logger.println(METHOD_NAME+": Attempting to authorize ...");
 		boolean authSuccess = false;
 		try
 		{
-			
+
 			String baseUrl = null;
 			if( null != fodUrl && !fodUrl.isEmpty() )
 			{
@@ -327,11 +330,11 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			{
 				baseUrl = FoDAPI.PUBLIC_FOD_BASE_URL;
 			}
-			
+
 			FoDAPI api = new FoDAPI();
 			api.setBaseUrl(baseUrl);
 			authSuccess = api.authorize(clientId,clientSecret);
-			
+
 			if( authSuccess )
 			{
 				logger.println(METHOD_NAME+": Auth success!");
@@ -340,23 +343,23 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			{
 				logger.println(METHOD_NAME+": Auth failed!");
 			}
-			
+
 			if(authSuccess)
-			{				
+			{
 				String prefix = "fodupload";
 				String suffix = ".zip";
 				logger.println(METHOD_NAME+": workspace = "+workspace);
 				File uploadFile = null;
-				
+
 				try
 				{
-					
+
 					String tmpDir = System.getProperty("java.io.tmpdir");
 					File dir = new File(tmpDir);
 					File tmpZipFile = File.createTempFile(prefix, suffix, dir);
-					
+
 					FileOutputStream fos = null;
-					
+
 					try {
 						fos = new FileOutputStream(tmpZipFile);
 
@@ -364,46 +367,46 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 						if (includeAllFiles)
 						{
 							localFilePatterns = ".*";
-						} else 
+						} else
 						{
 							localFilePatterns = getFileExpressionPatternString(technologyStack);
 						}
 						logger.println(METHOD_NAME+": effective file patterns = \""+localFilePatterns+"\"");
-						final Pattern p = Pattern.compile(localFilePatterns, Pattern.CASE_INSENSITIVE);				
-						
+						final Pattern p = Pattern.compile(localFilePatterns, Pattern.CASE_INSENSITIVE);
+
 						workspace.zip(fos, new RegExFileFilter(p));
-						
+
 
 					} catch (IOException e)
 					{
 						logger.println(METHOD_NAME+": error compressing workspace contents, please refer to the Jenkins log.");
 						e.printStackTrace();
 					}
-					
-					finally 
+
+					finally
 						{
 							if (fos != null)
 							{
 								try {
 									fos.flush();
 								} catch (IOException e){
-	
+
 								}
 								try {
 									fos.close();
 								} catch (IOException e){
-									
+
 								}
 							}
 						}
-					
+
 					logger.println(METHOD_NAME+": compressed workspace contents.");
-					
+
 					File localTmpZipFile = tmpZipFile;
-					
+
 					logger.println(METHOD_NAME+": localTmpZipFile = "+localTmpZipFile);
 					logger.println(METHOD_NAME+": localTmpZipFile.exists = "+localTmpZipFile.exists());
-					
+
 					if( null != localTmpZipFile && localTmpZipFile.exists() )
 					{
 						uploadFile = localTmpZipFile;
@@ -415,39 +418,39 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 				//TODO set global parameters on FoDAPI object instead
 				UploadRequest req = new UploadRequest();
 				req.setUploadZip(uploadFile);
 				req.setApplicationName(applicationName);
 				req.setReleaseName(releaseName);
-				req.setAssessmentTypeId(assessmentTypeId);  
+				req.setAssessmentTypeId(assessmentTypeId);
 				req.setTechnologyStack(technologyStack);
 				req.setLanguageLevel(languageLevel);
 				req.setRunOpenSourceAnalysis(runOpenSourceAnalysis);
 				req.setIsExpressScan(isExpressScan);
 				req.setIsExpressAudit(isExpressAudit);
 				req.setIncludeThirdParty(includeThirdParty);
-				
+
 				UploadStatus status = api.uploadFile(req);
-				
+
 				if( status.isUploadSucceeded() && doPollFortify)
 				{
 					Long releaseId = api.getReleaseId(applicationName, releaseName);
 					Release release = null;
-					
+
 					DateFormat df = new SimpleDateFormat("MM/dd/yy HH:mm:ss");
 					Date startTime = new Date();
-					
+
 					logger.println(METHOD_NAME+": build will await Fortify scan results for: "+ applicationName + " - " + releaseName);
 					logger.println(METHOD_NAME+": polling start: "+ df.format(startTime.getTime()));
-					
+
 					Long maxErrorAttempts = 12l;
 					Long attempts = 0l;
 					Long errorStatePollingWait = 60l; // Time in minutes * maxErrorAttempts = max error state period, applies to portal outages, or anything but authentication issues.
-					
+
 					Long pollingWait = null;
-					
+
 					try
 					{
 						if( null != pollingInterval && !pollingInterval.isEmpty() )
@@ -460,7 +463,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 							pollingWait = DEFAULT_POLLING_INTERVAL;
 							logger.println(METHOD_NAME+": Effective polling interval = "+pollingWait+" minutes.");
 						}
-						
+
 					}
 					catch( NumberFormatException nfe )
 					{
@@ -468,15 +471,15 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 						pollingWait = DEFAULT_POLLING_INTERVAL;
 						logger.println(METHOD_NAME+": Effective polling interval = "+pollingWait+" minutes.");
 					}
-						
+
 					Long originalPollingWait = pollingWait;  // save desired polling rate for reset upon successful retry with FoD
-					
+
 					boolean continueLoop = true;
 					do
 					{
 						try
 						{
-							//FIXME make configurable														
+							//FIXME make configurable
 							Thread.sleep(pollingWait*60*1000l);
 						}
 						catch (InterruptedException e)
@@ -485,69 +488,69 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 							e.printStackTrace();
 						}
 						try {
-							
+
 							Date dateobj = new Date();
 							String pollingTimestamp = df.format(dateobj.getTime());
-							
-							
-							if(!api.isLoggedIn())								
+
+
+							if(!api.isLoggedIn())
 								{
 									logger.println(METHOD_NAME+" "+pollingTimestamp+": Session stale, re-authenticating...");
 									try {
 										authSuccess = api.authorize(clientId, clientSecret);
-									} catch (IOException e) 
+									} catch (IOException e)
 									{
 										logger.println(METHOD_NAME+" "+pollingTimestamp+": Issue re-authenticating to Fortify on Demand, will retry "+(maxErrorAttempts - attempts)+" times.");
 										attempts++;
 									}
 								}
-							
+
 							logger.println(METHOD_NAME+" "+pollingTimestamp+": Polling Fortify on Demand for assessment status.");
-							try{ 
+							try{
 								release = api.getRelease(releaseId); //may see a 503 during maintenance etc. need to be able to withstand a longer outage in this case
-								
+
 								if (!pollingWait.equals(originalPollingWait))
 									{
-										
+
 										logger.println(METHOD_NAME+" "+pollingTimestamp+": Resetting poll time after retry extension to every " + originalPollingWait + " minute(s).");
 									}
-									
+
 								pollingWait = originalPollingWait;   // reset polling wait since call didn't throw an exception, needed if retrying
-								
+
 							} catch (IOException e)
 								{
 									attempts++;
 									pollingWait = errorStatePollingWait; // set to longer error state wait to give time for the FoD service to recover
-									logger.println(METHOD_NAME+" "+pollingTimestamp+": Issue reading status from HPE Fortify on Demand, will retry "+(maxErrorAttempts - attempts)+" additional times, every " + 
-									pollingWait + " minute(s), until resolved.");																							
+									logger.println(METHOD_NAME+" "+pollingTimestamp+": Issue reading status from HPE Fortify on Demand, will retry "+(maxErrorAttempts - attempts)+" additional times, every " +
+									pollingWait + " minute(s), until resolved.");
 								}
-							
+
 							if (release != null)
-							{							
-								
-								continueLoop = 
-										((ScanStatus.IN_PROGRESS.getId().intValue() 
-												== release.getStaticScanStatusId().intValue() 
-												|| ScanStatus.WAITING.getId().intValue() 
+							{
+
+								continueLoop =
+										((ScanStatus.IN_PROGRESS.getId().intValue()
+												== release.getStaticScanStatusId().intValue()
+												|| ScanStatus.WAITING.getId().intValue()
 												== release.getStaticScanStatusId().intValue()
 												) && (attempts < maxErrorAttempts));
-								
+
 								if (ScanStatus.WAITING.getId().intValue() == release.getStaticScanStatusId().intValue())
 								{
 									logger.println(METHOD_NAME+" "+pollingTimestamp+": Assessment is paused with a question from Fortify on Demand,"
 											+ " please contact your Technical Account Manager. Polling will continue.");
 								}
-								
+
 							}
 							else
 							{
 								attempts++;
-								logger.println(METHOD_NAME+": Error retrieving assessment status information from Fortify on Demand after "+attempts+ " attempts! Will retry "+(maxErrorAttempts - attempts)+ " more time(s), every " + 
-									pollingWait + " minute(s), until resolved.");	
+								logger.println(METHOD_NAME+": Error retrieving assessment status information from Fortify on Demand after "+attempts+ " attempts! Will retry "+(maxErrorAttempts - attempts)+ " more time(s), every " +
+									pollingWait + " minute(s), until resolved.");
 								continueLoop = false;
 							}
-						} catch (Exception e) 
-							{							
+						} catch (Exception e)
+							{
 								logger.println(METHOD_NAME+"Exception: "+e.getMessage());
 								attempts++;
 								continueLoop = false;
@@ -561,16 +564,16 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 						try
 						{
 							Integer passFailReasonIdInt = Integer.parseInt(passFailReasonStr);
-							
+
 							if( null != passFailReasonIdInt )
 							{
 								passFailReasonStr = AssessmentType.getTypeName(passFailReasonIdInt);
 							}
 						} catch(NumberFormatException nfe) {}
 					}
-					
+
 				//	logger.println(METHOD_NAME+": passFailReasonId: "+release.getPassFailReasonId()+(passFailReasonStr==null?"":" ("+passFailReasonStr+")"));
-					
+
 					if( ScanStatus.IN_PROGRESS.getId().equals(release.getStaticScanStatusId().intValue()) )
 					{
 						logger.println("Timed out while waiting for scan to complete. Marking build as unstable.");
@@ -584,13 +587,13 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 					else if( ScanStatus.COMPLETED.getId().equals(release.getStaticScanStatusId().intValue()) )
 					{
 						try {
-							
+
 							if(doPrettyLogOutput)
 							{
-								
-								
+
+
 								if( !release.getIsPassed() )
-								{	
+								{
 									logger.println("-------------------------------------------------------------------------------");
 									logger.println("       Fortify on Demand Assessment Results");
 									logger.println("-------------------------------------------------------------------------------");
@@ -607,7 +610,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 									logger.println("Scan failed established policy check, marking build as unstable.");
 									logger.println(" ");
 									logger.println("-------------------------------------------------------------------------------");
-									
+
 									build.setResult(Result.UNSTABLE);
 								}
 								else
@@ -628,19 +631,19 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 									logger.println("Scan passed established policy check, marking build as stable.");
 									logger.println(" ");
 									logger.println("-------------------------------------------------------------------------------");
-									
+
 									build.setResult(Result.SUCCESS);
-								}								
-							} 
-							else								
+								}
+							}
+							else
 							{
 								if( !release.getIsPassed() )
-								{	
-									
+								{
+
 									logger.println(METHOD_NAME+" Star Rating: " + release.getRating());
 									logger.println(METHOD_NAME+" Issue Count: " + release.getIssueCount());
 									logger.println(METHOD_NAME+" Policy Check: Failed");
-								
+
 									build.setResult(Result.UNSTABLE);
 								}
 								else
@@ -648,19 +651,19 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 									logger.println(METHOD_NAME+" Star Rating: " + release.getRating());
 									logger.println(METHOD_NAME+" Issue Count: " + release.getIssueCount());
 									logger.println(METHOD_NAME+" Policy Check: Passed");
-									
+
 									build.setResult(Result.SUCCESS);
-								}															
-							}							
-						} 
-						catch (Exception e) 
+								}
+							}
+						}
+						catch (Exception e)
 						{
 							logger.println(e.getMessage());
 						}
 					}
 					else if( ScanStatus.WAITING.getId().equals(release.getStaticScanStatusId().intValue()) )
 					{
-						logger.println("Scan status is 'WAITING'. Please contact your Technical Account Manager for details."); 
+						logger.println("Scan status is 'WAITING'. Please contact your Technical Account Manager for details.");
 						//this should loop until the scan completes after a question from the FoD team or the scan is ultimately canceled.
 					}
 					else
@@ -679,19 +682,19 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				else
 				{
 					logger.println(METHOD_NAME+": continuing Jenkins build without awaiting Fortify assessment results.");
-					
+
 				}
-				
+
 				if( null != uploadFile && uploadFile.exists() )
 				{
-					try 
+					try
 					{
 						boolean fileDeleted = uploadFile.delete();
 						if( fileDeleted )
 						{
 							logger.println(METHOD_NAME+": upload file "+uploadFile.getName()+" deleted");
 						}
-						else 
+						else
 						{
 							logger.println(METHOD_NAME+": upload file deletion failed!");
 						}
@@ -719,13 +722,16 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			logger.println(rte.toString());
 			build.setResult(Result.FAILURE);
 		}
-		
+
 		catch (IOException ioe)
 		{
 			ioe.printStackTrace();
 			logger.println(ioe.toString());
 			build.setResult(Result.FAILURE);
 		}
+
+		catch (java.security.NoSuchAlgorithmException e) { e.printStackTrace(); }
+		catch (KeyManagementException e) { e.printStackTrace(); }
 
 		clearTaskListener();
 	}
@@ -755,9 +761,9 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		private static final String CLASS_NAME = DescriptorImpl.class.getName();
-		
+
 		private static Logger log = LogManager.getLogManager().getLogger(DescriptorImpl.class.getName());
-		
+
 		private static final String TS_DOTNET_KEY = ".NET";
 		private static final String TS_JAVA_KEY = "JAVA/J2EE";
 		private static final String TS_RUBY_KEY = "Ruby";
@@ -774,7 +780,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		private static final String TS_VBSCRIPT_KEY = "VBScript";
 		private static final String TS_XML_HTML_KEY = "XML/HTML";
 
-		
+
 		/**
 		 * To persist global configuration information,
 		 * simply store it in a field and call save().
@@ -787,7 +793,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		private String fodUrl;
 		private String pollingInterval;
 		private String tenantCode;
-		
+
 		private transient FoDAPI api;
 		private transient Object apiLockMonitor = new Object();
 
@@ -797,13 +803,13 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		private transient Object releaseListLockMonitor = new Object();
 
 		/**
-		 * In order to load the persisted global configuration, you have to 
+		 * In order to load the persisted global configuration, you have to
 		 * call load() in the constructor.
 		 */
 		public DescriptorImpl() {
 			load();
 		}
-		
+
 		public FormValidation doCheckClientId(@QueryParameter String value)
 				throws IOException, ServletException
 		{
@@ -829,8 +835,8 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			}
 			return returnValue;
 		}
-		
-		
+
+
 		public FormValidation doCheckPollingInterval(@QueryParameter String value)
 				throws IOException, ServletException
 		{
@@ -855,7 +861,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			}
 			return returnValue;
 		}
-		
+
 		public FormValidation doCheckClientSecret(@QueryParameter String value)
 				throws IOException, ServletException
 		{
@@ -865,7 +871,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				returnValue = FormValidation.error("Please set a secret key");
 			}
 			else
-			{			
+			{
 				returnValue = FormValidation.ok();
 			}
 			return returnValue;
@@ -882,7 +888,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		 *	  <p>
 		 *	  Note that returning {@link FormValidation#error(String)} does not
 		 *	  prevent the form from being saved. It just means that a message
-		 *	  will be displayed to the user. 
+		 *	  will be displayed to the user.
 		 */
 		public FormValidation doCheckFodUrl(@QueryParameter String value)
 				throws IOException, ServletException
@@ -910,10 +916,10 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			}
 			return returnValue;
 		}
-		
-		public FormValidation doTestConnection(@QueryParameter("clientId") final String clientId, @QueryParameter("clientSecret") final String clientSecret, 
+
+		public FormValidation doTestConnection(@QueryParameter("clientId") final String clientId, @QueryParameter("clientSecret") final String clientSecret,
 				@QueryParameter("fodUrl") final String fodUrl) throws IOException, ServletException {
-			
+
 			final String METHOD_NAME = CLASS_NAME+".doTestConnection()";
 			PrintStream out = null;
 			out = System.out;
@@ -921,9 +927,9 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				FoDAPI api = new FoDAPI();
 				api.setBaseUrl(fodUrl);
 				boolean authSuccess = api.authorize(clientId,clientSecret);
-				
+
 				if( authSuccess )
-				{				
+				{
 					out.println(METHOD_NAME+": Connection validataion success!");
 					return FormValidation.ok("Successfully authenticated to Fortify on Demand!");
 				}
@@ -932,31 +938,31 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 					out.println(METHOD_NAME+": Connection validation failed!");
 					return FormValidation.error("Invalid connection information, please check your token, secret, and FoD URL");
 				}
-			} catch (Exception e) {				
+			} catch (Exception e) {
 				e.printStackTrace();
 				return FormValidation.error("Unable to validate connection, please check your Jenkins log");
 			}
 		}
-		
+
 		public ListBoxModel doFillAssessmentTypeIdItems() throws IOException
 		{
 			final String METHOD_NAME = CLASS_NAME+".doFillAssessmentTypeItems()";
 			PrintStream out = null;
 			out = System.out;
-			
+
 			ListBoxModel items = new ListBoxModel();
-			
+
 		//	out.println(METHOD_NAME+": getting FoD API object reference");
 			FoDAPI api = getApi();
 			if( null != api )
 			{
 				ensureLogin(api);
-				
+
 				if( api.isLoggedIn() )
 				{
 						out.println(METHOD_NAME+": getting assessment type list");
 						Map<String,String> assessmentTypeList = new TreeMap<String, String>(api.getAssessmentTypeListWithRetry());
-						
+
 						if( null != assessmentTypeList && !assessmentTypeList.isEmpty() )
 						{
 							out.println(METHOD_NAME+": assessmentTypeList.size = "+assessmentTypeList.size());
@@ -964,7 +970,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 							{
 								out.println(METHOD_NAME+": adding assessment type \""+item.getKey()+"\" to menu");
 
-								items.add(new Option(item.getKey(),item.getValue(),false));							
+								items.add(new Option(item.getKey(),item.getValue(),false));
 							}
 						}
 						else
@@ -977,7 +983,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			} else {
 				out.println(METHOD_NAME+": getApi() returned null");
 			}
-			
+
 			return items;
 		}
 		public ListBoxModel doFillApplicationNameItems()
@@ -985,21 +991,21 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			final String METHOD_NAME = CLASS_NAME+".doFillApplicationNameItems()";
 			PrintStream out = null;
 			out = System.out;
-			
+
 			ListBoxModel items = new ListBoxModel();
-			
+
 			out.println(METHOD_NAME+": getting FoD API object reference");
 			FoDAPI api = getApi();
 			if( null != api )
 			{
 				ensureLogin(api);
-				
+
 				if( api.isLoggedIn() )
 				{
 						out.println(METHOD_NAME+": getting application list");
 						List<String> appNameList = this.getApplicationNameList(api);
 						Collections.sort(appNameList, Collator.getInstance());
-						
+
 						if( null != appNameList && !appNameList.isEmpty() )
 						{
 							out.println(METHOD_NAME+": appNameList.size = "+appNameList.size());
@@ -1019,7 +1025,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			} else {
 				out.println(METHOD_NAME+": getApi() returned null");
 			}
-			
+
 			return items;
 		}
 
@@ -1028,11 +1034,11 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			final String METHOD_NAME = CLASS_NAME+".doFillReleaseNameItems()";
 			PrintStream out = null;
 			out = System.out;
-			
+
 			ListBoxModel items = new ListBoxModel();
-			
+
 			out.println(METHOD_NAME+": applicationName = "+applicationName);
-			
+
 			if( null != applicationName && !applicationName.isEmpty() )
 			{
 				out.println(METHOD_NAME+": getting FoD API object reference");
@@ -1040,7 +1046,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				if( null != api )
 				{
 					ensureLogin(api);
-					
+
 					if( api.isLoggedIn() )
 					{
 						out.println(METHOD_NAME+": getting release list for applicationName = "+applicationName);
@@ -1075,10 +1081,10 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			{
 				out.println(METHOD_NAME+": applicationName is null. doing nothing.");
 			}
-			
+
 			return items;
 		}
-		
+
 		public ListBoxModel doFillTechnologyStackItems() {
 			ListBoxModel items = new ListBoxModel();
 
@@ -1093,19 +1099,19 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			items.add(new Option(TS_PHP_KEY, TS_PHP_KEY, false));
 			items.add(new Option(TS_PLSQL_TSQL_KEY, TS_PLSQL_TSQL_KEY, false));
 			items.add(new Option(TS_PYTHON_KEY, TS_PYTHON_KEY,false));
-			items.add(new Option(TS_RUBY_KEY, TS_RUBY_KEY,false));				
+			items.add(new Option(TS_RUBY_KEY, TS_RUBY_KEY,false));
 			items.add(new Option(TS_VB6_KEY, TS_VB6_KEY, false));
 			items.add(new Option(TS_VBSCRIPT_KEY, TS_VBSCRIPT_KEY, false));
 			items.add(new Option(TS_XML_HTML_KEY, TS_XML_HTML_KEY, false));
 
 			return items;
 		}
-		
-		
+
+
 
 		public ListBoxModel doFillLanguageLevelItems(@QueryParameter("technologyStack") String technologyStack) {
 			ListBoxModel items = new ListBoxModel();
-					
+
 			if( TS_JAVA_KEY.equalsIgnoreCase(technologyStack))
 			{
 				items.add(new Option("1.3", "1.3",false));
@@ -1128,18 +1134,18 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			{
 				items.add(new Option("Standard Python", "Standard Python", false));
 				items.add(new Option("Django", "Django", false));
-				
+
 			}
 			else
 			{
 				items.add(new Option("N/A",null,false)); //support for no language level, must be null for correct API call
 			}
-			
+
 			return items;
 		}
 
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-			// Indicates that this builder can be used with all kinds of project types 
+			// Indicates that this builder can be used with all kinds of project types
 			//return aClass.isAssignableFrom(MavenModule.class) ||  aClass.isAssignableFrom(FreeStyleProject.class);
 			return true;
 		}
@@ -1157,13 +1163,13 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		{
 			final String METHOD_NAME = CLASS_NAME+".configure";
 			PrintStream out = getLogger();
-			
+
 			// To persist global configuration information,
 			// set that to properties and call save().
 			//useFrench = formData.getBoolean("useFrench");
 			// ^Can also use req.bindJSON(this, formData);
 			//  (easier when there are many fields; need set* methods for this, like setUseFrench)
-			
+
 			String newClientId = formData.getString("clientId");
 			if( null != newClientId && !newClientId.isEmpty() && !newClientId.equals(this.clientId) )
 			{
@@ -1175,7 +1181,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				this.releaseListRetrieveTime = 0l;
 				out.println(METHOD_NAME+": clientId = "+this.clientId);
 			}
-			
+
 			String newClientSecret = formData.getString("clientSecret");
 			if( null != newClientSecret && !newClientSecret.isEmpty() && !newClientSecret.equals(this.clientSecret) )
 			{
@@ -1187,13 +1193,13 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				this.releaseListRetrieveTime = 0l;
 			//	out.println(METHOD_NAME+": clientSecret = "+this.clientSecret);
 			}
-			
-			
+
+
 			String newFodUrl = formData.getString("fodUrl");
 			if( null != newFodUrl && !newFodUrl.isEmpty() && !newFodUrl.equals(this.fodUrl))
 			{
 				this.fodUrl = newFodUrl;
-				
+
 				if( null != api )
 				{
 					this.api.setBaseUrl(this.fodUrl);
@@ -1201,7 +1207,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				this.releaseListRetrieveTime = 0l;
 				out.println(METHOD_NAME+": fodUrl = "+this.fodUrl);
 			}
-			
+
 			String newPollingInterval = formData.getString("pollingInterval");
 
 			this.pollingInterval = newPollingInterval;
@@ -1223,7 +1229,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		public String getFodUrl() {
 			return fodUrl;
 		}
-		
+
 		public String getPollingInterval() {
 			return pollingInterval;
 		}
@@ -1241,7 +1247,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 //		public boolean getUseProxy() {
 //			return useProxy;
 //		}
-		
+
 		/**
 		 * Retrieves a reference to the FoDAPI class, creating this object if necessary.
 		 * @return
@@ -1259,7 +1265,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 					{
 						String configFodUrl = getFodUrl();
 						out.println(METHOD_NAME+": fodUrl = "+configFodUrl);
-						
+
 						api = new FoDAPI();
 						if( null != configFodUrl && !configFodUrl.isEmpty() )
 						{
@@ -1275,12 +1281,12 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 
 			return this.api;
 		}
-					
+
 		protected void ensureLogin(FoDAPI api)
 		{
 			final String METHOD_NAME = CLASS_NAME+".ensureLogin";
 			PrintStream out = getLogger();
-			
+
 				// timeout must be configured, or else a hung call here blocks everything
 				synchronized(this.apiLockMonitor)
 				{
@@ -1296,6 +1302,14 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						catch (java.security.NoSuchAlgorithmException e)
+						{
+							e.printStackTrace();
+						}
+						catch (KeyManagementException e)
+						{
+							e.printStackTrace();
+						}
 					}
 				}
 		}
@@ -1303,26 +1317,26 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		protected List<String> getApplicationNameList(FoDAPI api)
 		{
 			List<String> appNameList = null;
-			
+
 			refreshReleaseListCache(api);
-			
+
 			if( null != this.releaseListCache && !this.releaseListCache.isEmpty() )
 			{
 				appNameList = new LinkedList<String>();
 				for( Release release : this.releaseListCache )
 				{
 					String appName = release.getApplicationName();
-					if( null != appName && !appName.isEmpty() 
+					if( null != appName && !appName.isEmpty()
 							&& !appNameList.contains(appName) )
 					{
 						appNameList.add(appName);
 					}
 				}
 			}
-			
+
 			return appNameList;
 		}
-		
+
 		/**
 		 * Get list of release names, using cached list of names
 		 * @param api
@@ -1332,9 +1346,9 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 		protected List<String> getReleaseNameList(FoDAPI api, String applicationName)
 		{
 			List<String> releaseNameList = null;
-			
+
 			refreshReleaseListCache(api);
-			
+
 			if( null != this.releaseListCache && !this.releaseListCache.isEmpty() )
 			{
 				releaseNameList = new LinkedList<String>();
@@ -1342,14 +1356,14 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				{
 					String appName = release.getApplicationName();
 					String relName = release.getReleaseName();
-					if( null != relName && !relName.isEmpty() 
+					if( null != relName && !relName.isEmpty()
 							&& null != appName && appName.equals(applicationName) )
 					{
 						releaseNameList.add(relName);
 					}
 				}
 			}
-			
+
 			return releaseNameList;
 		}
 
@@ -1360,7 +1374,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 					if( this.isReleaseListCacheStale() )
 					{
 						List<Release> releases = getReleasesWithRetry(api, 5);
-						
+
 						if( null != releases && !releases.isEmpty() )
 						{
 							this.releaseListCache = releases;
@@ -1369,18 +1383,18 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 					}
 				}
 		}
-		
+
 		protected List<Release> getReleasesWithRetry(FoDAPI api, int maxAttempts)
 		{
 			final String METHOD_NAME = CLASS_NAME + ".getReleasesWithRetry";
 			PrintStream out = getLogger();
-			
+
 			List<Release> releases = null;
 			int attempts = 0;
-			
+
 			out.println(METHOD_NAME+": attempting to retrieve new list of application / release names");
 			out.println(METHOD_NAME+": maxAttempts = "+maxAttempts);
-			
+
 			while( (null == releases || releases.isEmpty()) && (attempts < maxAttempts) )
 			{
 				out.println(METHOD_NAME+": calling FoDAPI.getReleaseList() ; attempt number "+attempts);
@@ -1395,7 +1409,7 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 				}
 				++attempts;
 			}
-			
+
 			if( null == releases || releases.isEmpty() )
 			{
 				out.println(METHOD_NAME+": failed to retrieve release list");
@@ -1404,24 +1418,24 @@ public class FodBuilder extends Recorder implements SimpleBuildStep
 			{
 				out.println(METHOD_NAME+": retrieved list of "+releases.size()+" releases from FoD");
 			}
-			
+
 			return releases;
 		}
-		
+
 		protected boolean isReleaseListCacheStale()
 		{
 			final String METHOD_NAME = CLASS_NAME+".isReleaseListCacheStale";
 			PrintStream out = getLogger();
-			
+
 		//	out.println(METHOD_NAME+": releaseListCache = "+releaseListCache);
-			
-			boolean returnValue = 
+
+			boolean returnValue =
 					null == releaseListCache
 					|| releaseListCache.isEmpty()
 					|| null == releaseListRetrieveTime
 					|| null == releaseListRetentionTime
 					|| (releaseListRetrieveTime+releaseListRetentionTime < System.currentTimeMillis());
-			
+
 		//	out.println(METHOD_NAME+": releaseListCacheStale = "+returnValue);
 			return returnValue;
 		}
